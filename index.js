@@ -121,7 +121,7 @@ async function openSocket(record) {
       record.status = "uploading";
       record.message = "Linked! Creating your session ID…";
       record.resolveCode?.();
-      deliverSession(record, socket).catch((error) => {
+      deliverSession(record, socket, state, saveCreds).catch((error) => {
         console.log(`[${record.id}] deliver error: ${error?.message}`);
       });
     }
@@ -129,7 +129,7 @@ async function openSocket(record) {
     if (connection === "close") {
       record.qr = null;
       const statusCode = lastDisconnect?.error?.output?.statusCode;
-      const paired = Boolean(socket.authState?.creds?.me);
+      const paired = Boolean(state.creds?.me);
       const reason = `${statusCode ?? "no-code"}: ${lastDisconnect?.error?.message || "unknown"}`;
       record.lastError = reason;
       console.log(`[${record.id}] connection closed (${reason}) paired=${paired} retries=${record.reconnects}`);
@@ -196,13 +196,13 @@ async function sendWithRetry(socket, jid, content, tries = 4) {
 }
 
 // Uploads creds.json to MEGA and sends a short session ID to the linked account's own chat.
-async function deliverSession(record, socket) {
+async function deliverSession(record, socket, state, saveCreds) {
   try {
     if (!megaConfigured()) {
       throw new Error("Server is missing MEGA_EMAIL / MEGA_PASSWORD. Set them and try again.");
     }
 
-    await delay(3000); // let Baileys finish writing creds.json
+    await saveCreds(); // Persist the latest linked-account credentials before upload.
     const credsFile = path.join(record.authDir, "creds.json");
     const creds = await fs.readFile(credsFile);
 
@@ -221,7 +221,7 @@ async function deliverSession(record, socket) {
     // Short session ID: HansTz&<fileId>#<key>
     const sessionId = link.replace("https://mega.nz/file/", "HansTz&");
 
-    const me = socket.authState?.creds?.me;
+    const me = state.creds?.me;
     const targets = [me?.id, me?.lid].filter(Boolean).map((j) => jidNormalizedUser(j));
     if (!targets.length) throw new Error("Could not find the linked account's WhatsApp ID.");
 
