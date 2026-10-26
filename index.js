@@ -2,7 +2,9 @@ import express from "express";
 import makeWASocket, {
   useMultiFileAuthState,
   DisconnectReason,
-  Browsers
+  Browsers,
+  jidNormalizedUser,
+  delay
 } from "@whiskeysockets/baileys";
 import QRCode from "qrcode";
 import pino from "pino";
@@ -10,6 +12,7 @@ import crypto from "node:crypto";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import { upload as megaUpload, megaConfigured } from "./mega.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -80,12 +83,14 @@ async function openSocket(record) {
         if (!record.codeRequested) {
           record.codeRequested = true;
           try {
+            console.log(`[${record.id}] requesting pairing code for ${record.phone.slice(0, 4)}***`);
             const code = await socket.requestPairingCode(record.phone);
             record.code = formatCode(code);
             record.status = "waiting_for_pairing";
             record.message = "Enter this code in WhatsApp > Linked Devices > Link with phone number. It expires in about 1 minute.";
             record.resolveCode?.();
           } catch (error) {
+            console.log(`[${record.id}] pairing code error: ${error?.message}`);
             record.status = "error";
             record.message = error?.message || "Could not request a pairing code.";
             record.resolveCode?.();
@@ -105,20 +110,29 @@ async function openSocket(record) {
       }
     }
 
+    if (connection) console.log(`[${record.id}] connection: ${connection}`);
     if (connection === "open") {
-      record.status = "connected";
+      if (record.delivering || record.delivered) return;
+      record.delivering = true;
       record.qr = null;
       record.code = null;
       record.reconnects = 0;
       record.connectedAt = Date.now();
-      record.message = "WhatsApp linked successfully.";
+      record.status = "uploading";
+      record.message = "Linked! Creating your session ID…";
       record.resolveCode?.();
+      deliverSession(record, socket).catch((error) => {
+        console.log(`[${record.id}] deliver error: ${error?.message}`);
+      });
     }
 
     if (connection === "close") {
       record.qr = null;
       const statusCode = lastDisconnect?.error?.output?.statusCode;
       const paired = Boolean(socket.authState?.creds?.me);
+      const reason = `${statusCode ?? "no-code"}: ${lastDisconnect?.error?.message || "unknown"}`;
+      record.lastError = reason;
+      console.log(`[${record.id}] connection closed (${reason}) paired=${paired} retries=${record.reconnects}`);
 
       if (statusCode === DisconnectReason.loggedOut) {
         record.status = "logged_out";
@@ -154,11 +168,94 @@ async function openSocket(record) {
       record.status = "closed";
       record.message = paired
         ? "Connection closed. Create a new session to try again."
-        : "Connection closed before linking finished. Generate a new code and enter it within 1 minute.";
+        : `Connection closed before linking finished (${record.lastError}). Generate a new code and enter it within 1 minute.`;
       record.finished = true;
       record.resolveCode?.();
     }
   });
+}
+
+const MESSAGE = [
+  "*HANSXMD SESSION GENERATED* ✅",
+  "",
+  "Copy the session ID above and put it in your bot's SESSION_ID setting.",
+  "⚠️ Never share it with anyone."
+].join("\n");
+
+async function sendWithRetry(socket, jid, content, tries = 4) {
+  let lastError;
+  for (let i = 0; i < tries; i++) {
+    try {
+      return await socket.sendMessage(jid, content);
+    } catch (error) {
+      lastError = error;
+      await delay(1500 * (i + 1));
+    }
+  }
+  throw lastError;
+}
+
+// Uploads creds.json to MEGA and sends a short session ID to the linked account's own chat.
+async function deliverSession(record, socket) {
+  try {
+    if (!megaConfigured()) {
+      throw new Error("Server is missing MEGA_EMAIL / MEGA_PASSWORD. Set them and try again.");
+    }
+
+    await delay(3000); // let Baileys finish writing creds.json
+    const credsFile = path.join(record.authDir, "creds.json");
+    const creds = await fs.readFile(credsFile);
+
+    record.message = "Uploading session to MEGA…";
+    const fileName = `hansxmd_${crypto.randomBytes(4).toString("hex")}.json`;
+    let link;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try { link = await megaUpload(creds, fileName); break; }
+      catch (error) {
+        console.log(`[${record.id}] MEGA upload attempt ${attempt} failed: ${error?.message}`);
+        if (attempt === 3) throw error;
+        await delay(2000);
+      }
+    }
+
+    // Short session ID: HansTz&<fileId>#<key>
+    const sessionId = link.replace("https://mega.nz/file/", "HansTz&");
+
+    const me = socket.authState?.creds?.me;
+    const targets = [me?.id, me?.lid].filter(Boolean).map((j) => jidNormalizedUser(j));
+    if (!targets.length) throw new Error("Could not find the linked account's WhatsApp ID.");
+
+    record.message = "Sending session ID to your WhatsApp…";
+    let sent = false, sendError;
+    for (const jid of targets) {
+      try {
+        const msg = await sendWithRetry(socket, jid, { text: sessionId });
+        await sendWithRetry(socket, jid, { text: MESSAGE }, 2).catch(() => {});
+        void msg;
+        sent = true;
+        break;
+      } catch (error) { sendError = error; }
+    }
+    if (!sent) throw sendError || new Error("Could not send the session ID to WhatsApp.");
+
+    await delay(1500);
+    record.delivered = true;
+    record.status = "connected";
+    record.message = "Linked! Your session ID was sent to your WhatsApp (Message yourself).";
+    console.log(`[${record.id}] session delivered`);
+
+    // Done: stop the socket and remove local credentials from the server.
+    record.finished = true;
+    try { socket.end(undefined); } catch {}
+    setTimeout(() => fs.rm(record.authDir, { recursive: true, force: true }).catch(() => {}), 5000);
+  } catch (error) {
+    record.delivering = false;
+    record.status = "error";
+    record.message = `Linked, but session delivery failed: ${error?.message || error}`;
+    record.finished = true; // keep auth files so nothing is lost
+    try { socket.end(undefined); } catch {}
+    throw error;
+  }
 }
 
 async function startSession({ phone = "" } = {}) {

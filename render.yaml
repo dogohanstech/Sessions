@@ -15,3 +15,7 @@ services:
         value: "22"
       - key: SESSION_DIR
         value: /opt/render/project/src/sessions
+      - key: MEGA_EMAIL
+        sync: false
+      - key: MEGA_PASSWORD
+        sync: false
