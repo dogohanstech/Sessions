@@ -47,7 +47,7 @@ async function refreshStatus() {
     showStatus(data.status);
     if (data.qr) showQr(data.qr);
     if (data.code) $("#pairingCode").textContent = data.code;
-    if (data.message) setMessage(data.message, data.status === "error" ? "error" : "success");
+    if (data.message) setMessage(data.message, ["error", "closed", "logged_out"].includes(data.status) ? "error" : "success");
     if (["connected", "closed", "error", "logged_out"].includes(data.status)) stopPolling();
   } catch (error) {
     setMessage(error.message, "error");
@@ -79,7 +79,7 @@ async function createSession(mode) {
     showStatus(data.status);
     setMessage(data.message || "Session started.", "success");
     await refreshStatus();
-    state.pollTimer = setInterval(refreshStatus, 3000);
+    state.pollTimer = setInterval(refreshStatus, 2000);
   } catch (error) {
     $("#sessionId").textContent = "Not created";
     showStatus("error");
