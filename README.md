@@ -20,6 +20,12 @@ Open http://localhost:3000
 4. Set `SESSION_DIR` to the persistent disk mount path.
 5. Keep the `sessions/` directory private; never commit it or expose it through static hosting.
 
+## Linking tips
+- Pairing code: enter the number with country code, digits only (e.g. 2348012345678). Enter the code within ~1 minute: WhatsApp > Linked devices > Link a device > Link with phone number instead.
+- The status must change to `connected`. After you enter the code the page briefly shows `reconnecting` - that is normal.
+- If linking fails, delete the old linked-device entry in WhatsApp and generate a fresh code.
+- `@whiskeysockets/baileys` is set to `latest`; run `npm update` to refresh.
+
 ## Important security notes
 - Pair only WhatsApp accounts you own or are authorized to manage.
 - The `sessions/` folder contains authentication material. Anyone who obtains it may be able to access the linked account.
