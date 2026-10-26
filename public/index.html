@@ -1,373 +1,833 @@
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#080b12">
-  <title>HansXmd | Session Generator</title>
+  <meta name="theme-color" content="#06090f">
+  <meta name="description" content="HansXmd WhatsApp Session Generator">
+  <title>HansXmd | 3D Session Generator</title>
+
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+
   <style>
     :root {
-      color-scheme: dark;
-      --bg: #080b12;
-      --panel: #111827;
-      --green: #00ff9d;
-      --blue: #00bfff;
-      --text: #edf5ff;
-      --muted: #9aa9bd;
+      --bg: #06090f;
+      --panel: rgba(16, 25, 38, .78);
+      --line: rgba(130, 255, 218, .14);
+      --green: #00ffad;
+      --cyan: #00d9ff;
+      --text: #f1fff9;
+      --muted: #93a7b4;
+      --red: #ff587a;
+      --depth: 0 25px 70px rgba(0, 0, 0, .45);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
-      margin: 0;
       min-height: 100vh;
-      padding: 24px 14px;
-      font-family: Arial, sans-serif;
+      margin: 0;
+      overflow-x: hidden;
       color: var(--text);
       background:
-        radial-gradient(ellipse at top, #10283a 0, transparent 55%),
+        radial-gradient(ellipse at 50% -15%, rgba(0, 255, 173, .15), transparent 42%),
+        radial-gradient(circle at 0% 50%, rgba(0, 217, 255, .07), transparent 32%),
+        radial-gradient(circle at 100% 80%, rgba(0, 255, 173, .06), transparent 30%),
         var(--bg);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
     }
 
-    main { max-width: 760px; margin: auto; }
+    body::before {
+      position: fixed;
+      z-index: -1;
+      inset: 0;
+      content: "";
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(0, 255, 173, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 173, .035) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black, transparent 85%);
+    }
 
-    header { text-align: center; padding: 24px 0; }
+    body::after {
+      position: fixed;
+      z-index: -1;
+      top: -180px;
+      left: 50%;
+      width: 540px;
+      height: 540px;
+      content: "";
+      border: 1px solid rgba(0, 255, 173, .08);
+      border-radius: 50%;
+      box-shadow:
+        0 0 0 50px rgba(0, 255, 173, .018),
+        0 0 0 100px rgba(0, 255, 173, .015),
+        0 0 90px rgba(0, 255, 173, .05);
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
 
-    .logo {
-      display: inline-grid;
+    button, input {
+      font: inherit;
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible, input:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 4px;
+    }
+
+    .container {
+      width: min(1120px, calc(100% - 36px));
+      margin: auto;
+      padding: 28px 0 30px;
+    }
+
+    /* Top navigation */
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      display: grid;
+      width: 43px;
+      height: 43px;
       place-items: center;
-      width: 68px;
-      height: 68px;
-      border: 1px solid var(--green);
-      border-radius: 20px;
+      border: 1px solid rgba(0, 255, 173, .5);
+      border-radius: 13px;
+      background: linear-gradient(145deg, #1b5948, #091712);
+      box-shadow:
+        inset 0 1px 0 #ffffff22,
+        0 0 24px #00ffad1c;
       color: var(--green);
-      font-size: 28px;
-      font-weight: 900;
-      box-shadow: 0 0 25px #00ff9d22;
+      font-weight: 1000;
+      transform: perspective(300px) rotateY(-12deg) rotateX(7deg);
     }
 
-    h1 { margin-bottom: 8px; }
-    h1 span { color: var(--green); }
-    p { color: var(--muted); line-height: 1.6; }
+    .brand-name {
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .brand-name span {
+      color: var(--green);
+    }
+
+    .brand-sub {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 50px;
+      background: #0b1716c9;
+      color: #baffdf;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 12px var(--green);
+      animation: pulse 1.8s infinite;
+    }
+
+    /* 3D hero */
+
+    .header {
+      position: relative;
+      padding: 24px 0 46px;
+      text-align: center;
+      perspective: 1000px;
+    }
+
+    .hero-orbit {
+      position: relative;
+      display: grid;
+      width: 112px;
+      height: 112px;
+      margin: 0 auto 27px;
+      place-items: center;
+      border: 1px solid rgba(0, 255, 173, .32);
+      border-radius: 32px;
+      background:
+        linear-gradient(145deg, rgba(0, 255, 173, .19), rgba(0, 217, 255, .04)),
+        #0a151b;
+      box-shadow:
+        inset 0 1px 0 #ffffff20,
+        inset 0 -12px 25px #0005,
+        0 22px 45px #0008,
+        0 0 45px #00ffad13;
+      transform: rotateX(10deg) rotateY(-10deg);
+      animation: float 5s ease-in-out infinite;
+    }
+
+    .hero-orbit::before,
+    .hero-orbit::after {
+      position: absolute;
+      content: "";
+      inset: -12px;
+      border: 1px solid rgba(0, 255, 173, .18);
+      border-radius: 39px;
+      transform: rotate(15deg);
+    }
+
+    .hero-orbit::after {
+      inset: -21px;
+      border-color: rgba(0, 217, 255, .10);
+      border-radius: 46px;
+      transform: rotate(-15deg);
+    }
+
+    .hero-logo {
+      color: var(--green);
+      font-size: 43px;
+      font-weight: 1000;
+      letter-spacing: -5px;
+      text-shadow: 0 0 24px #00ffad70;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid #00ffad30;
+      border-radius: 50px;
+      background: #00ffad09;
+      color: var(--green);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 2px;
+    }
+
+    .header h1 {
+      margin: 18px 0 10px;
+      font-size: clamp(40px, 8vw, 78px);
+      font-weight: 1000;
+      line-height: .98;
+      letter-spacing: -3px;
+      text-shadow: 0 10px 35px #0008;
+    }
+
+    .header h1 span {
+      color: transparent;
+      background: linear-gradient(90deg, #f4fff9 5%, var(--green) 50%, var(--cyan) 95%);
+      background-clip: text;
+      -webkit-background-clip: text;
+    }
+
+    .header > p {
+      max-width: 530px;
+      margin: 18px auto;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .hero-tags {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 22px;
+    }
+
+    .hero-tags span {
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0c151dbb;
+      color: #c1d4d9;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* Security notice */
+
+    .notice {
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      padding: 17px;
+      margin-bottom: 22px;
+      border: 1px solid rgba(255, 196, 93, .2);
+      border-radius: 16px;
+      background: linear-gradient(110deg, #30251450, #10141bba);
+      color: #d8c8a8;
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .notice-icon {
+      flex: 0 0 auto;
+      color: #ffcb68;
+      font-size: 19px;
+    }
+
+    /* Dashboard panels */
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+      align-items: stretch;
+    }
 
     .card {
-      background: #111827eF;
-      border: 1px solid #26364a;
-      border-radius: 18px;
-      padding: 22px;
-      margin: 16px 0;
-      box-shadow: 0 12px 35px #0005;
+      position: relative;
+      min-width: 0;
+      padding: 25px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background:
+        linear-gradient(145deg, rgba(20, 34, 47, .92), rgba(9, 15, 24, .95));
+      box-shadow:
+        inset 0 1px 0 #ffffff0b,
+        0 25px 60px #0003;
+      transform: perspective(1200px) rotateX(1deg);
+      transition: border-color .25s, transform .25s, box-shadow .25s;
     }
 
-    h2 { font-size: 18px; margin-top: 0; }
+    .card::before {
+      position: absolute;
+      top: 0;
+      left: 12%;
+      width: 76%;
+      height: 1px;
+      content: "";
+      background: linear-gradient(90deg, transparent, #00ffad65, transparent);
+    }
 
-    label {
-      display: block;
-      margin: 16px 0 8px;
-      font-size: 13px;
+    .card:hover {
+      border-color: rgba(0, 255, 173, .35);
+      box-shadow: 0 25px 65px #0005, 0 0 35px #00ffad09;
+      transform: perspective(1200px) rotateX(0deg) translateY(-3px);
+    }
+
+    .card-heading {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin-bottom: 10px;
+    }
+
+    .card-icon {
+      display: grid;
+      width: 45px;
+      height: 45px;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid #00ffad24;
+      border-radius: 14px;
+      background: linear-gradient(145deg, #00ffad19, #00d9ff08);
+      color: var(--green);
+      font-size: 20px;
+      box-shadow: inset 0 1px 0 #ffffff12;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 850;
+      letter-spacing: -.3px;
+    }
+
+    .card p {
       color: var(--muted);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .field {
+      display: grid;
+      gap: 10px;
+      margin: 22px 0 17px;
+    }
+
+    .field label {
+      color: #d6e6e9;
+      font-size: 12px;
+      font-weight: 800;
     }
 
     input {
       width: 100%;
-      padding: 14px;
-      border-radius: 10px;
-      border: 1px solid #34445a;
-      background: #080d16;
-      color: white;
-      font-size: 16px;
+      min-height: 50px;
+      padding: 14px 15px;
+      border: 1px solid #30404c;
+      border-radius: 12px;
       outline: none;
+      background: #070d14;
+      color: var(--text);
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    input::placeholder {
+      color: #5e707e;
     }
 
     input:focus {
       border-color: var(--green);
+      box-shadow: 0 0 0 4px #00ffad12;
     }
 
     button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 12px;
-      border: 0;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 48px;
+      padding: 13px 17px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .3px;
       cursor: pointer;
-      background: var(--green);
-      color: #04130c;
+      transition: transform .2s, filter .2s, border-color .2s;
     }
 
-    button.secondary {
-      background: #132b3c;
-      border: 1px solid #17617a;
-      color: #bceeff;
+    button:hover {
+      filter: brightness(1.08);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0) scale(.99);
     }
 
     button:disabled {
-      opacity: .55;
       cursor: wait;
+      opacity: .6;
+      transform: none;
+    }
+
+    .primary {
+      width: 100%;
+      color: #04130d;
+      background: linear-gradient(110deg, #00ffad, #8affd7);
+      box-shadow: 0 8px 25px #00ffad1c, inset 0 1px 0 #ffffff75;
+    }
+
+    .secondary {
+      width: 100%;
+      border-color: #2a3d48;
+      background: linear-gradient(145deg, #17232f, #0e1720);
+      color: #dce9ee;
     }
 
     .result {
-      margin-top: 16px;
-      padding: 14px;
-      background: #080d16;
-      border: 1px solid #26364a;
-      border-radius: 10px;
+      padding: 16px;
+      margin-top: 19px;
+      border: 1px solid #263945;
+      border-radius: 15px;
+      background: rgba(3, 9, 15, .68);
+    }
+
+    .result p {
+      margin: 0 0 12px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .code {
+      min-height: 35px;
+      margin: 12px 0;
+      color: var(--green);
+      font-size: clamp(20px, 3vw, 27px);
+      font-weight: 950;
+      letter-spacing: 3px;
+      overflow-wrap: anywhere;
+      text-shadow: 0 0 20px #00ffad25;
+    }
+
+    #copyCodeButton {
+      margin-top: 5px;
+    }
+
+    .qr-result {
+      display: grid;
+      min-height: 230px;
+      place-items: center;
+      align-content: center;
+      gap: 12px;
+    }
+
+    #qrImage {
+      width: min(100%, 250px);
+      padding: 12px;
+      border: 1px solid #ffffff20;
+      border-radius: 15px;
+      background: #fff;
+      box-shadow: 0 15px 40px #0006;
+    }
+
+    #qrHint {
+      text-align: center;
+    }
+
+    .session-card {
+      grid-column: 1 / -1;
+    }
+
+    .session-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .session-box {
+      padding: 17px;
+      border: 1px solid #253945;
+      border-radius: 14px;
+      background: #070d14a8;
+    }
+
+    .session-label {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+
+    .small-code {
+      font-size: 17px;
+      letter-spacing: .6px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: #a6b6c1;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: capitalize;
+    }
+
+    .status::before {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #7e8b98;
+      content: "";
+    }
+
+    .status.online {
+      color: var(--green);
+    }
+
+    .status.online::before {
+      background: var(--green);
+      box-shadow: 0 0 13px var(--green);
+    }
+
+    .status.error {
+      color: var(--red);
+    }
+
+    .status.error::before {
+      background: var(--red);
+      box-shadow: 0 0 12px #ff587a80;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 17px;
+    }
+
+    .message {
+      min-height: 22px;
+      margin: 16px 0 0;
       overflow-wrap: anywhere;
     }
 
-    .value {
+    .message[data-type="error"] {
+      color: var(--red);
+    }
+
+    .message[data-type="success"] {
       color: var(--green);
-      font-size: 18px;
-      font-weight: bold;
     }
 
-    .hidden { display: none; }
-
-    #qrImage {
-      display: block;
-      width: min(100%, 280px);
-      margin: 16px auto;
-      background: white;
-      border-radius: 10px;
-      padding: 8px;
+    .footer {
+      padding: 30px 0 10px;
+      color: #657b87;
+      text-align: center;
+      font-size: 11px;
+      line-height: 2;
     }
 
-    .status { color: var(--blue); font-weight: bold; }
-    .notice { font-size: 12px; }
-    footer { text-align: center; padding: 20px; font-size: 12px; }
+    .footer strong {
+      color: #9cb4bf;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .4; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotateX(10deg) rotateY(-10deg); }
+      50% { transform: translateY(-8px) rotateX(13deg) rotateY(-5deg); }
+    }
+
+    @media (max-width: 700px) {
+      .container {
+        width: min(100% - 22px, 520px);
+        padding-top: 18px;
+      }
+
+      .topbar {
+        margin-bottom: 28px;
+      }
+
+      .header {
+        padding: 20px 0 32px;
+      }
+
+      .header h1 {
+        letter-spacing: -2px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        padding: 20px;
+        border-radius: 18px;
+        transform: none;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+      }
+
+      .session-card {
+        grid-column: auto;
+      }
+
+      .session-layout {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .live-pill {
+        padding: 8px 10px;
+        font-size: 9px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
   </style>
 </head>
 
 <body>
-<main>
-  <header>
-    <div class="logo">HX</div>
-    <h1>HANS<span>XMD</span></h1>
-    <p>WhatsApp Session Generator<br>
-       Pairing Code · QR Scanner · Session Status</p>
-  </header>
+  <main class="container">
+    <nav class="topbar" aria-label="Main navigation">
+      <div class="brand">
+        <div class="brand-icon">HX</div>
+        <div>
+          <div class="brand-name">HANS<span>XMD</span></div>
+          <div class="brand-sub">Connection console</div>
+        </div>
+      </div>
 
-  <section class="card">
-    <h2>01 / Pair with phone number</h2>
-    <p>Enter your own WhatsApp number with its country code.</p>
+      <div class="live-pill">
+        <span class="live-dot"></span>
+        SESSION CENTER
+      </div>
+    </nav>
 
-    <label for="phone">WhatsApp phone number</label>
-    <input id="phone" type="tel"
-      inputmode="numeric"
-      placeholder="255XXXXXXXXX"
-      autocomplete="tel">
+    <header class="header">
+      <div class="hero-orbit">
+        <div class="hero-logo">HX</div>
+      </div>
 
-    <button id="pairBtn" onclick="requestPairing()">
-      Generate Pairing Code
-    </button>
+      <div class="eyebrow">✦ NEXT-GEN WHATSAPP TOOL</div>
+      <h1>HANS<span>XMD</span></h1>
+      <p>
+        Connect your own WhatsApp account through a secure pairing code
+        or QR code with a futuristic session dashboard.
+      </p>
 
-    <div id="pairResult" class="result hidden" aria-live="polite"></div>
-  </section>
+      <div class="hero-tags">
+        <span>◈ PAIRING CODE</span>
+        <span>◉ QR CONNECTION</span>
+        <span>⌁ LIVE STATUS</span>
+      </div>
+    </header>
 
-  <section class="card">
-    <h2>02 / Link with QR code</h2>
-    <p>Generate a QR code and scan it from WhatsApp Linked Devices.</p>
+    <div class="notice">
+      <span class="notice-icon">⚠</span>
+      <div>
+        <strong>Security notice</strong><br>
+        Pair only an account you own or are authorized to manage.
+        Never share your pairing code, QR code, or session files.
+        Anyone with your authentication files may be able to access your account.
+      </div>
+    </div>
 
-    <button id="qrBtn" class="secondary" onclick="requestQR()">
-      Generate QR Code
-    </button>
+    <div class="grid">
+      <section class="card">
+        <div class="card-heading">
+          <div class="card-icon">⌘</div>
+          <div>
+            <h2>Phone Pairing</h2>
+            <p>Connect using your phone number.</p>
+          </div>
+        </div>
 
-    <div id="qrResult" class="result hidden" aria-live="polite"></div>
-    <img id="qrImage" class="hidden" alt="WhatsApp linking QR code">
-  </section>
+        <div class="field">
+          <label for="phoneNumber">PHONE NUMBER WITH COUNTRY CODE</label>
+          <input
+            id="phoneNumber"
+            type="tel"
+            inputmode="numeric"
+            autocomplete="tel"
+            placeholder="2557XXXXXXXX"
+            aria-describedby="phoneHelp"
+          >
+          <p id="phoneHelp">Enter digits only, including your country code.</p>
+        </div>
 
-  <section class="card">
-    <h2>03 / Check session status</h2>
-    <label for="sessionId">Session ID</label>
-    <input id="sessionId" placeholder="hansxmd_XXXXXXXX">
+        <button id="pairingButton" class="primary" type="button">
+          <span>↗</span> Generate Pairing Code
+        </button>
 
-    <button class="secondary" onclick="checkStatus()">
-      Check Status
-    </button>
+        <div class="result">
+          <p>Your pairing code</p>
+          <div id="pairingCode" class="code" aria-live="polite">—</div>
+          <button id="copyCodeButton" class="secondary" type="button">
+            ▣ Copy Pairing Code
+          </button>
+        </div>
+      </section>
 
-    <div id="statusResult" class="result hidden" aria-live="polite"></div>
-  </section>
+      <section class="card">
+        <div class="card-heading">
+          <div class="card-icon">▦</div>
+          <div>
+            <h2>QR Pairing</h2>
+            <p>Scan using WhatsApp Linked Devices.</p>
+          </div>
+        </div>
 
-  <footer>
-    HANSXMD SESSION GENERATOR<br>
-    Keep your WhatsApp credentials private.
-    <p class="notice">
-      Only link devices you own or are authorized to manage.
-    </p>
-  </footer>
-</main>
+        <p>
+          Generate a QR code, then open WhatsApp on your phone and
+          choose <strong>Linked devices → Link a device</strong>.
+        </p>
 
-<script>
-  // Configure this token privately in your own deployment setup.
-  // Do not commit a real secret to GitHub or expose a live token
-  // in a public website. Use a protected backend for admin requests.
-  const API_BASE = "";
+        <button id="qrButton" class="primary" type="button">
+          <span>⌗</span> Generate QR Code
+        </button>
 
-  function show(id, content) {
-    const el = document.getElementById(id);
-    el.classList.remove("hidden");
-    el.replaceChildren();
+        <div class="result qr-result">
+          <img id="qrImage" alt="WhatsApp pairing QR code" hidden>
+          <p id="qrHint">Your QR code will appear here.</p>
+        </div>
+      </section>
 
-    if (typeof content === "string") {
-      el.textContent = content;
-    } else {
-      el.appendChild(content);
-    }
-  }
+      <section class="card session-card">
+        <div class="card-heading">
+          <div class="card-icon">◉</div>
+          <div>
+            <h2>Session Monitor</h2>
+            <p>Check the state of your current connection.</p>
+          </div>
+        </div>
 
-  function sessionResult(data, extra = "") {
-    const wrapper = document.createElement("div");
+        <div class="session-layout">
+          <div class="session-box">
+            <div class="session-label">Session ID</div>
+            <div id="sessionId" class="code small-code">Not created</div>
+          </div>
 
-    const idLabel = document.createElement("p");
-    idLabel.textContent = "Session ID";
+          <div class="session-box">
+            <div class="session-label">Connection status</div>
+            <p><span id="connectionStatus" class="status">Idle</span></p>
+          </div>
+        </div>
 
-    const idValue = document.createElement("div");
-    idValue.className = "value";
-    idValue.textContent = data.sessionId;
+        <div class="actions">
+          <button id="refreshButton" class="secondary" type="button">
+            ↻ Refresh Status
+          </button>
+          <button id="stopButton" class="secondary" type="button">
+            ▌▌ Pause Refresh
+          </button>
+        </div>
 
-    const status = document.createElement("p");
-    status.textContent = extra || data.message || data.status || "";
+        <p id="message" class="message" role="status" aria-live="polite">
+          Ready to start.
+        </p>
+      </section>
+    </div>
 
-    wrapper.append(idLabel, idValue, status);
-
-    document.getElementById("sessionId").value = data.sessionId;
-    return wrapper;
-  }
-
-  async function apiRequest(path, options = {}) {
-    // The backend requires ADMIN_TOKEN. Do not insert it into this
-    // public file. Configure an authenticated owner-only frontend
-    // or protected server-side proxy before enabling API requests.
-    const response = await fetch(API_BASE + path, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers
-      }
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || "Request failed.");
-    }
-
-    return data;
-  }
-
-  async function requestPairing() {
-    const phone = document.getElementById("phone").value.trim();
-    const button = document.getElementById("pairBtn");
-
-    if (!phone) {
-      show("pairResult", "Enter your phone number first.");
-      return;
-    }
-
-    button.disabled = true;
-
-    try {
-      const data = await apiRequest("/api/session/pairing", {
-        method: "POST",
-        body: JSON.stringify({ phone })
-      });
-
-      const result = sessionResult(data);
-      const code = document.createElement("div");
-      code.className = "value";
-      code.textContent = "Pairing code: " + data.pairingCode;
-      result.appendChild(code);
-      show("pairResult", result);
-    } catch (error) {
-      show("pairResult", error.message);
-    } finally {
-      button.disabled = false;
-    }
-  }
-
-  async function requestQR() {
-    const button = document.getElementById("qrBtn");
-    button.disabled = true;
-    document.getElementById("qrImage").classList.add("hidden");
-
-    try {
-      const data = await apiRequest("/api/session/qr", {
-        method: "POST",
-        body: JSON.stringify({})
-      });
-
-      show("qrResult", sessionResult(data));
-
-      const image = document.getElementById("qrImage");
-      image.src = "";
-      image.classList.remove("hidden");
-
-      // Poll for the QR generated by Baileys.
-      let attempts = 0;
-
-      const poll = async () => {
-        if (attempts++ >= 30) {
-          show("qrResult", "QR not received. Please try again.");
-          image.classList.add("hidden");
-          return;
-        }
-
-        try {
-          const result = await apiRequest(
-            "/api/session/" + encodeURIComponent(data.sessionId) + "/qr"
-          );
-
-          if (result.qr) {
-            image.src = result.qr;
-            return;
-          }
-        } catch (_) {
-          // QR may not be ready yet.
-        }
-
-        setTimeout(poll, 2000);
-      };
-
-      poll();
-    } catch (error) {
-      show("qrResult", error.message);
-    } finally {
-      button.disabled = false;
-    }
-  }
-
-  async function checkStatus() {
-    const id = document.getElementById("sessionId").value.trim();
-
-    if (!id) {
-      show("statusResult", "Enter a session ID first.");
-      return;
-    }
-
-    try {
-      const data = await apiRequest(
-        "/api/session/" + encodeURIComponent(id) + "/status"
-      );
-
-      const wrapper = sessionResult(data);
-      const status = document.createElement("p");
-      status.className = "status";
-      status.textContent = "Status: " + data.status;
-      wrapper.appendChild(status);
-
-      if (data.error) {
-        const error = document.createElement("p");
-        error.textContent = data.error;
-        wrapper.appendChild(error);
-      }
-
-      show("statusResult", wrapper);
-    } catch (error) {
-      show("statusResult", error.message);
-    }
-  }
-</script>
+    <footer class="footer">
+      <strong>HANSXMD</strong> · SESSION GENERATOR<br>
+      Designed for a cleaner connection experience.<br>
+      <span>Keep your authentication files private.</span>
+    </footer>
+  </main>
 </body>
 </html>
