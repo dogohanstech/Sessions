@@ -1,0 +1,18 @@
+
+services:
+  - type: web
+    name: hansxmd-session-generator
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    disk:
+      name: hansxmd-sessions
+      mountPath: /opt/render/project/src/sessions
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: ADMIN_TOKEN
+        sync: false
