@@ -1,0 +1,373 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080b12">
+  <title>HansXmd | Session Generator</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080b12;
+      --panel: #111827;
+      --green: #00ff9d;
+      --blue: #00bfff;
+      --text: #edf5ff;
+      --muted: #9aa9bd;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px 14px;
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at top, #10283a 0, transparent 55%),
+        var(--bg);
+    }
+
+    main { max-width: 760px; margin: auto; }
+
+    header { text-align: center; padding: 24px 0; }
+
+    .logo {
+      display: inline-grid;
+      place-items: center;
+      width: 68px;
+      height: 68px;
+      border: 1px solid var(--green);
+      border-radius: 20px;
+      color: var(--green);
+      font-size: 28px;
+      font-weight: 900;
+      box-shadow: 0 0 25px #00ff9d22;
+    }
+
+    h1 { margin-bottom: 8px; }
+    h1 span { color: var(--green); }
+    p { color: var(--muted); line-height: 1.6; }
+
+    .card {
+      background: #111827eF;
+      border: 1px solid #26364a;
+      border-radius: 18px;
+      padding: 22px;
+      margin: 16px 0;
+      box-shadow: 0 12px 35px #0005;
+    }
+
+    h2 { font-size: 18px; margin-top: 0; }
+
+    label {
+      display: block;
+      margin: 16px 0 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #34445a;
+      background: #080d16;
+      color: white;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--green);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 12px;
+      border: 0;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      background: var(--green);
+      color: #04130c;
+    }
+
+    button.secondary {
+      background: #132b3c;
+      border: 1px solid #17617a;
+      color: #bceeff;
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    .result {
+      margin-top: 16px;
+      padding: 14px;
+      background: #080d16;
+      border: 1px solid #26364a;
+      border-radius: 10px;
+      overflow-wrap: anywhere;
+    }
+
+    .value {
+      color: var(--green);
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .hidden { display: none; }
+
+    #qrImage {
+      display: block;
+      width: min(100%, 280px);
+      margin: 16px auto;
+      background: white;
+      border-radius: 10px;
+      padding: 8px;
+    }
+
+    .status { color: var(--blue); font-weight: bold; }
+    .notice { font-size: 12px; }
+    footer { text-align: center; padding: 20px; font-size: 12px; }
+  </style>
+</head>
+
+<body>
+<main>
+  <header>
+    <div class="logo">HX</div>
+    <h1>HANS<span>XMD</span></h1>
+    <p>WhatsApp Session Generator<br>
+       Pairing Code · QR Scanner · Session Status</p>
+  </header>
+
+  <section class="card">
+    <h2>01 / Pair with phone number</h2>
+    <p>Enter your own WhatsApp number with its country code.</p>
+
+    <label for="phone">WhatsApp phone number</label>
+    <input id="phone" type="tel"
+      inputmode="numeric"
+      placeholder="255XXXXXXXXX"
+      autocomplete="tel">
+
+    <button id="pairBtn" onclick="requestPairing()">
+      Generate Pairing Code
+    </button>
+
+    <div id="pairResult" class="result hidden" aria-live="polite"></div>
+  </section>
+
+  <section class="card">
+    <h2>02 / Link with QR code</h2>
+    <p>Generate a QR code and scan it from WhatsApp Linked Devices.</p>
+
+    <button id="qrBtn" class="secondary" onclick="requestQR()">
+      Generate QR Code
+    </button>
+
+    <div id="qrResult" class="result hidden" aria-live="polite"></div>
+    <img id="qrImage" class="hidden" alt="WhatsApp linking QR code">
+  </section>
+
+  <section class="card">
+    <h2>03 / Check session status</h2>
+    <label for="sessionId">Session ID</label>
+    <input id="sessionId" placeholder="hansxmd_XXXXXXXX">
+
+    <button class="secondary" onclick="checkStatus()">
+      Check Status
+    </button>
+
+    <div id="statusResult" class="result hidden" aria-live="polite"></div>
+  </section>
+
+  <footer>
+    HANSXMD SESSION GENERATOR<br>
+    Keep your WhatsApp credentials private.
+    <p class="notice">
+      Only link devices you own or are authorized to manage.
+    </p>
+  </footer>
+</main>
+
+<script>
+  // Configure this token privately in your own deployment setup.
+  // Do not commit a real secret to GitHub or expose a live token
+  // in a public website. Use a protected backend for admin requests.
+  const API_BASE = "";
+
+  function show(id, content) {
+    const el = document.getElementById(id);
+    el.classList.remove("hidden");
+    el.replaceChildren();
+
+    if (typeof content === "string") {
+      el.textContent = content;
+    } else {
+      el.appendChild(content);
+    }
+  }
+
+  function sessionResult(data, extra = "") {
+    const wrapper = document.createElement("div");
+
+    const idLabel = document.createElement("p");
+    idLabel.textContent = "Session ID";
+
+    const idValue = document.createElement("div");
+    idValue.className = "value";
+    idValue.textContent = data.sessionId;
+
+    const status = document.createElement("p");
+    status.textContent = extra || data.message || data.status || "";
+
+    wrapper.append(idLabel, idValue, status);
+
+    document.getElementById("sessionId").value = data.sessionId;
+    return wrapper;
+  }
+
+  async function apiRequest(path, options = {}) {
+    // The backend requires ADMIN_TOKEN. Do not insert it into this
+    // public file. Configure an authenticated owner-only frontend
+    // or protected server-side proxy before enabling API requests.
+    const response = await fetch(API_BASE + path, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Request failed.");
+    }
+
+    return data;
+  }
+
+  async function requestPairing() {
+    const phone = document.getElementById("phone").value.trim();
+    const button = document.getElementById("pairBtn");
+
+    if (!phone) {
+      show("pairResult", "Enter your phone number first.");
+      return;
+    }
+
+    button.disabled = true;
+
+    try {
+      const data = await apiRequest("/api/session/pairing", {
+        method: "POST",
+        body: JSON.stringify({ phone })
+      });
+
+      const result = sessionResult(data);
+      const code = document.createElement("div");
+      code.className = "value";
+      code.textContent = "Pairing code: " + data.pairingCode;
+      result.appendChild(code);
+      show("pairResult", result);
+    } catch (error) {
+      show("pairResult", error.message);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function requestQR() {
+    const button = document.getElementById("qrBtn");
+    button.disabled = true;
+    document.getElementById("qrImage").classList.add("hidden");
+
+    try {
+      const data = await apiRequest("/api/session/qr", {
+        method: "POST",
+        body: JSON.stringify({})
+      });
+
+      show("qrResult", sessionResult(data));
+
+      const image = document.getElementById("qrImage");
+      image.src = "";
+      image.classList.remove("hidden");
+
+      // Poll for the QR generated by Baileys.
+      let attempts = 0;
+
+      const poll = async () => {
+        if (attempts++ >= 30) {
+          show("qrResult", "QR not received. Please try again.");
+          image.classList.add("hidden");
+          return;
+        }
+
+        try {
+          const result = await apiRequest(
+            "/api/session/" + encodeURIComponent(data.sessionId) + "/qr"
+          );
+
+          if (result.qr) {
+            image.src = result.qr;
+            return;
+          }
+        } catch (_) {
+          // QR may not be ready yet.
+        }
+
+        setTimeout(poll, 2000);
+      };
+
+      poll();
+    } catch (error) {
+      show("qrResult", error.message);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function checkStatus() {
+    const id = document.getElementById("sessionId").value.trim();
+
+    if (!id) {
+      show("statusResult", "Enter a session ID first.");
+      return;
+    }
+
+    try {
+      const data = await apiRequest(
+        "/api/session/" + encodeURIComponent(id) + "/status"
+      );
+
+      const wrapper = sessionResult(data);
+      const status = document.createElement("p");
+      status.className = "status";
+      status.textContent = "Status: " + data.status;
+      wrapper.appendChild(status);
+
+      if (data.error) {
+        const error = document.createElement("p");
+        error.textContent = data.error;
+        wrapper.appendChild(error);
+      }
+
+      show("statusResult", wrapper);
+    } catch (error) {
+      show("statusResult", error.message);
+    }
+  }
+</script>
+</body>
+</html>
