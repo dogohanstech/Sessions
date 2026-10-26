@@ -1,0 +1,255 @@
+
+:root {
+  color-scheme: dark;
+  --bg: #070b12;
+  --panel: #101824;
+  --panel-light: #172333;
+  --green: #00e89a;
+  --green-dark: #00b979;
+  --text: #f2f7fb;
+  --muted: #9aa9b9;
+  --border: #263648;
+  --danger: #ff647c;
+  font-family: Inter, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top, #12342d 0%, transparent 45%),
+    var(--bg);
+  color: var(--text);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: 0;
+  border-radius: 12px;
+  padding: 13px 18px;
+  font-weight: 700;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  color: var(--text);
+  background: #080e16;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px #00e89a1c;
+}
+
+a {
+  color: var(--green);
+}
+
+.container {
+  width: min(100% - 32px, 960px);
+  margin: 0 auto;
+  padding: 30px 0 48px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.logo {
+  display: inline-grid;
+  place-items: center;
+  width: 66px;
+  height: 66px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, var(--green), #008cfa);
+  color: #03120d;
+  font-size: 25px;
+  font-weight: 900;
+  box-shadow: 0 8px 35px #00e89a25;
+}
+
+.header h1 {
+  margin: 16px 0 8px;
+  font-size: clamp(28px, 5vw, 42px);
+}
+
+.header p,
+.muted {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.badge {
+  display: inline-block;
+  padding: 7px 11px;
+  border: 1px solid #00e89a45;
+  border-radius: 999px;
+  color: var(--green);
+  background: #00e89a0d;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.card {
+  min-width: 0;
+  padding: 23px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: linear-gradient(145deg, #121c29, #0c131d);
+  box-shadow: 0 16px 45px #00000020;
+}
+
+.card h2 {
+  margin: 0 0 10px;
+  font-size: 20px;
+}
+
+.card p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.field {
+  display: grid;
+  gap: 9px;
+  margin: 18px 0;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #d9e5ee;
+}
+
+.primary {
+  width: 100%;
+  color: #03140d;
+  background: linear-gradient(100deg, var(--green), #55f5bd);
+}
+
+.secondary {
+  width: 100%;
+  color: var(--text);
+  background: var(--panel-light);
+  border: 1px solid var(--border);
+}
+
+.result {
+  margin-top: 18px;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #080e16;
+  overflow-wrap: anywhere;
+}
+
+.result img {
+  display: block;
+  width: min(100%, 260px);
+  margin: 14px auto;
+  padding: 10px;
+  border-radius: 12px;
+  background: white;
+}
+
+.code {
+  color: var(--green);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.status::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #8190a0;
+}
+
+.status.online::before {
+  background: var(--green);
+  box-shadow: 0 0 10px #00e89a80;
+}
+
+.status.error {
+  color: var(--danger);
+}
+
+.status.error::before {
+  background: var(--danger);
+}
+
+.notice {
+  padding: 13px 15px;
+  margin-top: 18px;
+  border: 1px solid #e8b84b45;
+  border-radius: 12px;
+  background: #e8b84b0d;
+  color: #e9d6a3;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.footer {
+  margin-top: 28px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+@media (max-width: 650px) {
+  .container {
+    width: min(100% - 22px, 480px);
+    padding-top: 22px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 19px;
+  }
+}
